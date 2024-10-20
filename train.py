@@ -6,6 +6,9 @@ import datetime
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+import hydra
+from omegaconf import DictConfig
+import os
 
 transform = transforms.Compose([
     transforms.RandomHorizontalFlip(),  # Data Augmentation (Random flip)
@@ -19,8 +22,13 @@ train_set = torchvision.datasets.CIFAR10(root='./data', train=True,
                                          download=True, transform=transform)
 train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
 
-def train(model, criterion, optimizer, num_epoch, lr):
-    for epoch in range(num_epoch):
+@hydra.main(config_path='config', config_name='config')
+def train(cfg: DictConfig):
+    model = CNN(cfg.dropout)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+
+    for epoch in range(cfg.num_epoch):
         model.train()
         for i, (images, labels) in enumerate(train_loader):
             optimizer.zero_grad()
@@ -29,15 +37,15 @@ def train(model, criterion, optimizer, num_epoch, lr):
             loss.backward()
             optimizer.step()
             if (i+1) % 100 == 0:
-                print(f'Epoch [{epoch+1}/{num_epoch}], Step [{i+1}/{len(train_loader)}], Loss: {loss.item()}')
-    torch.save(model.state_dict(), f'saved/CNN_{lr}_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.save')
+                print(f'Epoch [{epoch+1}/{cfg.num_epoch}], Step [{i+1}/{len(train_loader)}], Loss: {loss.item()}')
+    
+    save_dir = 'saved'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # Save the model with a timestamped filename
+    torch.save(model.state_dict(), f'{save_dir}/model.save')
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--num_epoch', type=int, default=5)
-    args = parser.parse_args()
-    model = CNN(args.dropout)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    train(model, criterion, optimizer, args.num_epoch, args.lr)
+    train()

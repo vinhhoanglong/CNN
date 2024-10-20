@@ -5,6 +5,8 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import argparse
 import os
+import hydra
+from omegaconf import OmegaConf
 
 transform = transforms.Compose([
     transforms.RandomHorizontalFlip(),  # Data Augmentation (Random flip)
@@ -15,9 +17,17 @@ transform = transforms.Compose([
 
 test_set = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform) 
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=False)   
+def load_config_from_output(output_dir):
+    """Load the config.yaml from the output directory where training was done."""
+    config_path = os.path.join(output_dir, '.hydra', 'config.yaml')
+    return OmegaConf.load(config_path)
 
-def main(test_loader, model_path):
-    model = CNN(0.3)
+
+
+def main(output_dir):
+    cfg = load_config_from_output(output_dir)
+    model = CNN(cfg.dropout)
+    model_path = os.path.join(output_dir, 'saved/model.save')
     model.load_state_dict(torch.load(model_path))
     model.eval()
     correct = 0
@@ -32,6 +42,6 @@ def main(test_loader, model_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='saved/CNN_0.001_2024-10-19_20-03-28.save')
+    parser.add_argument('--output', type=str, default='outputs/2024-10-20/17-02-44')
     args = parser.parse_args()
-    main(test_loader, args.model_path)
+    main(args.output)
