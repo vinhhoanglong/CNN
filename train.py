@@ -52,7 +52,7 @@ def train(cfg: DictConfig):
         os.makedirs(save_dir)
 
     # Save the model with a timestamped filename
-    torch.save(model.state_dict(), f'{save_dir}/model_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.pt')
+    torch.save(model.state_dict(), f'{save_dir}/model.save')
 
 
 if __name__ == "__main__":
