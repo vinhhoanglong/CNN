@@ -1,0 +1,3 @@
+- num_epoch=20
+- lr=0.001
+- dropout=0.3
