@@ -1,0 +1,3 @@
+- num_epoch=20
+- dropout=0.2
+- criterion=mse
