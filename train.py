@@ -7,7 +7,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig,OmegaConf
 import os
 
 # Define transforms including data augmentation and normalization
@@ -18,7 +18,6 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize
 ])
 
-# Load training and test sets
 train_set = torchvision.datasets.CIFAR10(root='./data', train=True,
                                          download=True, transform=transform)
 train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
@@ -28,10 +27,10 @@ def train(cfg: DictConfig):
     # Check if CUDA is available and set the device accordingly
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
-
-    model = CNN(cfg.dropout).to(device)  # Move model to the device (CPU or GPU)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+    print(OmegaConf.to_yaml(cfg))
+    model = CNN(cfg.dropout).to(device)  
+    criterion = hydra.utils.instantiate(cfg.criterion)
+    optimizer = hydra.utils.instantiate(cfg.optimizers, params=model.parameters())
 
     for epoch in range(cfg.num_epoch):
         model.train()

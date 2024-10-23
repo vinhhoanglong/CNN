@@ -1,4 +1,7 @@
-lr: 0.01
+defaults:
+  - optimizers: adam
+  - criterion: cross_entropy
+
 num_epoch: 3
 dropout: 0.1
 
